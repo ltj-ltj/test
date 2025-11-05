@@ -1,0 +1,50 @@
+name: Relay Isaac Sim 5.1 image (hardcoded creds)
+
+on:
+  workflow_dispatch:
+
+jobs:
+  relay:
+    runs-on: ubuntu-latest
+    env:
+
+      # ---- 目标仓库（你的 CR）鉴权（按你的实际 CR 修改）----
+      # 例子：阿里云 ACR: registry.cn-hangzhou.aliyuncs.com
+      #      Docker Hub: index.docker.io
+      #      GHCR: ghcr.io
+      DEST_REGISTRY: "tests-ap-southeast-1.cr.volces.com"
+      DEST_USERNAME: "litingjie.666@54005373"
+      DEST_PASSWORD: "eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiIsImtpZCI6IkFGR0c6UTRZUDpUWTVNOkdaQ1U6SlZLVjpFWEpEOjNUWUY6Sk9LSDpPVFBJOjdOQVA6MlFaQTpQRUlFIn0.eyJpc3MiOiJjci1pc3N1ZXIiLCJzdWIiOiJsaXRpbmdqaWUuNjY2QDU0MDA1MzczIiwiYXVkIjpbImNyIl0sImV4cCI6MTc2MjMzOTIzMSwibmJmIjoxNzYyMzM1NjMxLCJpYXQiOjE3NjIzMzU2MzEsImp0aSI6ImRENk82ZFRSWnNYbFl6aEsiLCJpZGVudGl0eV90eXBlIjoidXNlciIsImlkZW50aXR5X2FjY291bnRfaWQiOjIxMDg0MTE0ODcsImlkZW50aXR5X3VzZXJfaWQiOjU0MDA1MzczLCJpbmxpbmVfcG9saWN5IjoiSDRzSUFBQUFBQUFDLzZxdUJRUUFBUC8vUTcrbW93SUFBQUEifQ.RkmUBlN3CJ6qvy5FvxltxZwLN9AcZWmPfV3KrXtP55D-HCqtbX_koPQxcSxDhr053T6PJ9jQn3BCvo-KKUN7dVZMp5lGTq4wkzibzZ4KTus3yuneJ156vk2EHxWgybhHIxu165UWhFL1usoVjdldaVCuUnY3c2cZmH79tjzLH0_cHESbVR9s41odjRrvU8Cs2EA7_qdHPqvzkssblEpumNbwXznF_X9DspGc5qDhFMC_mI-qvvmLtMtrWWD5tkPy4Bh7D3YvGVHbgnpvGuZZNvg4S5pldiX7X66gUaoKQx7769_Xa0m7q-WkFNYW4qQkIVQeKH4dYE8pUQBpWypRig"
+
+      # ---- 目标镜像命名（按需改命名空间/仓库名/标签）----
+      DEST_IMAGE: "tests-ap-southeast-1.cr.volces.com/haha/sim-jupyter:5.1.0"
+
+      # ---- 源镜像（固定，不要改）----
+      SRC_IMAGE: "rucio/jupyterlab:latest"
+
+    steps:
+      - name: Show Docker version
+        run: |
+          docker version
+          docker info
+      - name: login to volc cr
+        run: |
+          docker login tests-ap-southeast-1.cr.volces.com -u litingjie.666@54005373 -p eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiIsImtpZCI6IkFGR0c6UTRZUDpUWTVNOkdaQ1U6SlZLVjpFWEpEOjNUWUY6Sk9LSDpPVFBJOjdOQVA6MlFaQTpQRUlFIn0.eyJpc3MiOiJjci1pc3N1ZXIiLCJzdWIiOiJsaXRpbmdqaWUuNjY2QDU0MDA1MzczIiwiYXVkIjpbImNyIl0sImV4cCI6MTc2MjMzOTIzMSwibmJmIjoxNzYyMzM1NjMxLCJpYXQiOjE3NjIzMzU2MzEsImp0aSI6ImRENk82ZFRSWnNYbFl6aEsiLCJpZGVudGl0eV90eXBlIjoidXNlciIsImlkZW50aXR5X2FjY291bnRfaWQiOjIxMDg0MTE0ODcsImlkZW50aXR5X3VzZXJfaWQiOjU0MDA1MzczLCJpbmxpbmVfcG9saWN5IjoiSDRzSUFBQUFBQUFDLzZxdUJRUUFBUC8vUTcrbW93SUFBQUEifQ.RkmUBlN3CJ6qvy5FvxltxZwLN9AcZWmPfV3KrXtP55D-HCqtbX_koPQxcSxDhr053T6PJ9jQn3BCvo-KKUN7dVZMp5lGTq4wkzibzZ4KTus3yuneJ156vk2EHxWgybhHIxu165UWhFL1usoVjdldaVCuUnY3c2cZmH79tjzLH0_cHESbVR9s41odjRrvU8Cs2EA7_qdHPqvzkssblEpumNbwXznF_X9DspGc5qDhFMC_mI-qvvmLtMtrWWD5tkPy4Bh7D3YvGVHbgnpvGuZZNvg4S5pldiX7X66gUaoKQx7769_Xa0m7q-WkFNYW4qQkIVQeKH4dYE8pUQBpWypRig       
+      - name: Pull source image
+        run: |
+          docker pull "${SRC_IMAGE}"
+
+      - name: Retag for destination
+        run: |
+          docker tag "${SRC_IMAGE}" "${DEST_IMAGE}"
+          docker images | grep isaac-sim || true
+
+      - name: Push to destination
+        run: |
+          docker push "${DEST_IMAGE}"
+
+      - name: Logout
+        if: always()
+        run: |
+          docker logout nvcr.io || true
+          docker logout "${DEST_REGISTRY}" || true
