@@ -1,0 +1,50 @@
+name: Relay Isaac Sim 5.1 image (hardcoded creds)
+
+on:
+  workflow_dispatch:
+
+jobs:
+  relay:
+    runs-on: ubuntu-latest
+    env:
+
+      # ---- 目标仓库（你的 CR）鉴权（按你的实际 CR 修改）----
+      # 例子：阿里云 ACR: registry.cn-hangzhou.aliyuncs.com
+      #      Docker Hub: index.docker.io
+      #      GHCR: ghcr.io
+      DEST_REGISTRY: "tests-ap-southeast-1.cr.volces.com"
+      DEST_USERNAME: "litingjie.666@54005373"
+      DEST_PASSWORD: "yJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiIsImtpZCI6IkFGR0c6UTRZUDpUWTVNOkdaQ1U6SlZLVjpFWEpEOjNUWUY6Sk9LSDpPVFBJOjdOQVA6MlFaQTpQRUlFIn0.eyJpc3MiOiJjci1pc3N1ZXIiLCJzdWIiOiJsaXRpbmdqaWUuNjY2QDU0MDA1MzczIiwiYXVkIjpbImNyIl0sImV4cCI6MTc2MjMzNzA3MSwibmJmIjoxNzYyMzMzNDcxLCJpYXQiOjE3NjIzMzM0NzEsImp0aSI6IjZ6T0pFVXFvbEhKUjBMdjAiLCJpZGVudGl0eV90eXBlIjoidXNlciIsImlkZW50aXR5X2FjY291bnRfaWQiOjIxMDg0MTE0ODcsImlkZW50aXR5X3VzZXJfaWQiOjU0MDA1MzczLCJpbmxpbmVfcG9saWN5IjoiSDRzSUFBQUFBQUFDLzZxdUJRUUFBUC8vUTcrbW93SUFBQUEifQ.BLLPOyW_ChY85UAQTvB0TZfC_nNnXqd5Vi2BHgEupMMzwNLwLasKO91pUIisFPZdChvetFDLsq1ihbZXbe_ERYbkytEwnib_wWF7IfbU6KeQmzdR9Pe-VfPkQT2tuiRexUj1A_ZoKnIFi1vzrjvUeqAU6wmIwcHWWsrDghJSYOHlsjocK4ZCYlnoZXTyt4Xsoxi5MOkcyCavLkbguggnfrEsHCpbF7HXBvCKE4tnhAqfvonHDYosElkCGhJyhXLTWlRHAGSZimjm-YlVdocbxd6jEDI1p54ucAo3p0qMx-4iRXwLMT5FBc8GhM7KJaCryN2EVVe5GJGPeyI-YdXiNQ"
+
+      # ---- 目标镜像命名（按需改命名空间/仓库名/标签）----
+      DEST_IMAGE: "tests-ap-southeast-1.cr.volces.com/haha/sim-jupyter:5.1.0"
+
+      # ---- 源镜像（固定，不要改）----
+      SRC_IMAGE: "rucio/jupyterlab:latest"
+
+    steps:
+      - name: Show Docker version
+        run: |
+          docker version
+          docker info
+      - name: login to volc cr
+        run: |
+              docker login --username=litingjie.666@54005373 tests-ap-southeast-1.cr.volces.com  
+      - name: Pull source image
+        run: |
+          docker pull "${SRC_IMAGE}"
+
+      - name: Retag for destination
+        run: |
+          docker tag "${SRC_IMAGE}" "${DEST_IMAGE}"
+          docker images | grep isaac-sim || true
+
+      - name: Push to destination
+        run: |
+          docker push "${DEST_IMAGE}"
+
+      - name: Logout
+        if: always()
+        run: |
+          docker logout nvcr.io || true
+          docker logout "${DEST_REGISTRY}" || true
